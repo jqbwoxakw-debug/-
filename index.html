@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>سوق أبوالوفا - متجر الكتب</title>
+  <style>
+    :root{
+      --brand:#008ecc;
+      --brand-dark:#0672a8;
+      --accent:#ffb703;
+      --bg:#f6f7fb;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:16px;
+      --nav-h:64px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:"Cairo","Tahoma",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+    header{
+      position:sticky;top:0;z-index:10;
+      background:linear-gradient(90deg,var(--brand),var(--brand-dark));
+      color:#fff;padding:16px 20px;
+      display:flex;align-items:center;justify-content:space-between;
+      box-shadow:var(--shadow);
+    }
+    header .brand{display:flex;gap:10px;align-items:center;font-weight:800;font-size:20px;letter-spacing:.3px}
+    header .brand span{opacity:.9;font-weight:600}
+    header .search{
+      display:flex;align-items:center;gap:8px;
+      background:rgba(255,255,255,.12);padding:8px 12px;border-radius:999px;
+      width:min(520px,60vw)
+    }
+    header .search input{
+      background:transparent;border:0;outline:0;color:#fff;width:100%;
+      font-size:14px;
+    }
+    header .search input::placeholder{color:rgba(255,255,255,.8)}
+    .container{padding:18px 16px 100px;max-width:1200px;margin:0 auto;}
+    /* grid of books */
+    .grid{
+      display:grid;gap:16px;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    }
+    .card{
+      background:var(--card);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;transition:transform .2s ease, box-shadow .2s ease;cursor:pointer;
+      display:flex;flex-direction:column;
+    }
+    .card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(0,0,0,.12)}
+    .thumb{aspect-ratio:3/4;width:100%;object-fit:cover}
+    .card .meta{padding:10px 12px 14px}
+    .title{font-size:15px;font-weight:700;margin:0 0 6px}
+    .price{font-size:14px;color:var(--brand-dark);font-weight:700}
+    /* pages */
+    .page{display:none}
+    .page.active{display:block}
+    /* details */
+    .details-wrap{
+      display:grid;grid-template-columns:280px 1fr;gap:24px;
+    }
+    .details-img{width:100%;border-radius:var(--radius);box-shadow:var(--shadow);object-fit:cover}
+    .badge{display:inline-block;background:rgba(0,0,0,.06);color:#111;padding:4px 10px;border-radius:999px;font-size:12px;margin-inline-start:6px}
+    .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .btn{
+      border:0;outline:0;border-radius:12px;padding:10px 14px;cursor:pointer;
+      font-weight:700;transition:.2s ease;box-shadow:var(--shadow);font-size:14px;
+    }
+    .btn.brand{background:var(--brand);color:#fff}
+    .btn.brand:hover{background:var(--brand-dark)}
+    .btn.ghost{background:#fff}
+    .muted{color:var(--muted);font-size:14px}
+    .divider{height:1px;background:#e5e7eb;margin:18px 0}
+    .reviews .item{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+    .add-comment{display:flex;gap:8px}
+    .add-comment input{flex:1;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;font-size:14px}
+    /* cart */
+    .cart-list .row{
+      display:grid;grid-template-columns:64px 1fr auto auto;align-items:center;gap:12px;
+      background:#fff;border-radius:14px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:10px
+    }
+    .cart-thumb{width:64px;height:80px;border-radius:10px;object-fit:cover}
+    .qty{display:flex;align-items:center;gap:8px}
+    .qty button{width:28px;height:28px;border-radius:8px;border:0;background:#f1f5f9;cursor:pointer}
+    .totals{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-top:12px;font-weight:800}
+    /* account + payment */
+    .panel{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    .panel input{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;font-size:14px}
+    /* bottom nav */
+    .bottom-nav{
+      position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);z-index:20;
+      background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:space-around;align-items:center;
+      box-shadow:0 -6px 18px rgba(0,0,0,.06)
+    }
+    .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:#111;text-decoration:none;font-size:12px}
+    .nav-item.active{color:var(--brand)}
+    .pill{display:inline-flex;min-width:20px;height:20px;border-radius:999px;background:var(--accent);color:#111;font-weight:800;align-items:center;justify-content:center;font-size:12px;padding:0 6px}
+    /* helpers */
+    @media (max-width:900px){.details-wrap{grid-template-columns:1fr}}
+    .hide{display:none!important}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">📚 سوق أبوالوفا <span class="badge">متجر كتب</span></div>
+    <div class="search">
+      🔎
+      <input id="q" type="search" placeholder="ابحث عن كتاب..." oninput="filterBooks(this.value)">
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- صفحة قائمة الكتب -->
+    <section id="page-books" class="page active">
+      <div id="booksGrid" class="grid"></div>
+    </section>
+
+    <!-- صفحة التفاصيل -->
+    <section id="page-details" class="page">
+      <div class="details-wrap">
+        <img id="dImg" class="details-img" alt="غلاف الكتاب" />
+        <div>
+          <h2 id="dTitle" style="margin:.2rem 0 .4rem;font-size:26px;font-weight:900"></h2>
+          <div class="muted" id="dPriceWrap">السعر: <b id="dPrice"></b> جنيه <span class="badge" id="dTag">كتب مختارة</span></div>
+          <div class="actions">
+            <button class="btn brand" onclick="addCurrentToCart()">إضافة للسلة 🛒</button>
+            <button class="btn ghost" onclick="goBack()">رجوع للقائمة</button>
+          </div>
+          <div class="divider"></div>
+          <p id="dDesc" style="font-size:15px"></p>
+
+          <div class="divider"></div>
+          <div class="reviews">
+            <h3 style="margin:0 0 8px">💬 آراء القرّاء</h3>
+            <div id="reviewsList"></div>
+            <div class="add-comment" style="margin-top:10px">
+              <input id="commentInput" type="text" placeholder="اكتب تعليقك واضغط إضافة..." />
+              <button class="btn brand" onclick="addComment()">إضافة</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- صفحة السلة -->
+    <section id="page-cart" class="page">
+      <h2 style="margin:0 0 10px">🛒 سلة المشتريات</h2>
+      <div id="cartList" class="cart-list"></div>
+      <div class="totals">
+        <div>الإجمالي: <span id="cartTotal">0</span> جنيه</div>
+        <div class="qty">
+          <button class="btn ghost" onclick="clearCart()">تفريغ السلة</button>
+          <button class="btn brand" onclick="showPage('payment')">المتابعة للدفع</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- صفحة الحساب -->
+    <section id="page-account" class="page">
+      <div class="panel">
+        <h2 style="margin-top:0">👤 حسابي</h2>
+        <div id="authBox">
+          <p class="muted">سجّل اسمك للمتابعة (تجريبي محليًا)</p>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="nameInput" placeholder="اكتب اسمك..." />
+            <button class="btn brand" onclick="fakeLogin()">تسجيل</button>
+          </div>
+        </div>
+        <div id="welcomeBox" class="hide">
+          <p>مرحبًا، <b id="welcomeName"></b> 🎉</p>
+          <button class="btn ghost" onclick="logout()">تسجيل الخروج</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- صفحة الدفع -->
+    <section id="page-payment" class="page">
+      <div class="panel">
+        <h2 style="margin-top:0">💳 الدفع</h2>
+        <p>من فضلك حوِّل المبلغ الإجمالي عبر <b>فودافون كاش</b> إلى الرقم:</p>
+        <p style="font-size:22px;font-weight:900;color:#d00000;margin:.4rem 0">01553073695</p>
+        <p class="muted">بعد التحويل، احتفظ برقم العملية وتواصل معنا لتأكيد الطلب.</p>
+        <div class="divider"></div>
+        <div><b>ملخص السلة:</b></div>
+        <div id="paySummary" class="muted" style="margin-top:6px"></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn brand" onclick="confirmOrder()">تأكيد الدفع</button>
+          <button class="btn ghost" onclick="showPage('cart')">رجوع للسلة</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- تنقل سفلي ثابت -->
+  <nav class="bottom-nav">
+    <a class="nav-item active" id="nav-books" href="#" onclick="showPage('books')">🏠 <span>الرئيسية</span></a>
+    <a class="nav-item" id="nav-cart" href="#" onclick="showPage('cart')">🛒 <span>السلة <span id="cartCount" class="pill">0</span></span></a>
+    <a class="nav-item" id="nav-account" href="#" onclick="showPage('account')">👤 <span>الحساب</span></a>
+    <a class="nav-item" id="nav-payment" href="#" onclick="showPage('payment')">💳 <span>الدفع</span></a>
+  </nav>
+
+  <script>
+    /*************** بيانات 100 كتاب (مولَّدة بدون أرقام في العنوان) ***************/
+    const nouns = ['الحكمة','القراءة','الإلهام','النجاح','الفشل','الصبر','الشجاعة','الهدوء','القيادة','التفاوض','الإبداع','الخيال','الطموح','العادات','التفكير','المعرفة','العلم','العمل','المستقبل','التكنولوجيا','اللغة','التاريخ','الفلسفة','الأدب','الرحلة','الطبيعة','الاقتصاد','المال','الإدارة','التسويق','البرمجة','التصميم','الموسيقى','التصوير','الشعر','الطبخ','الصحة','اللياقة','التربية','النفس','العلاقات','الوقت','المهارات','التواصل','الإقناع','التوازن','المرونة','القيَم','الابتكار','التركيز','الإنتاجية','الوعي','العقل','التأثير','الريادة','الانضباط','الطاقة','الذهن','الخيارات','اتخاذ القرار','التعلّم','الذاكرة','الملاحظة','التحليل','الحياة','العمل الحر','الفن','السينما','السرد','القصة','الدراما','الرحلات','الطهي','البستنة','الطاقة الشمسية','البيانات','الذكاء الاصطناعي','الأمن الرقمي','الألعاب','الاستثمار','الأسواق','المحاسبة','المشاريع','القانون','الدبلوماسية','الأطفال','المدرسة','الجامعة','المنطق','الأخلاق','الكون','الفضاء','الطيران','المحيطات','البيئة','الزراعة','الترجمة','التدوين','الخط العربي','التغذية'];
+    const adjectives = ['المبسّط','العملي','المتقدم','للمبتدئين','الشامل','المكثّف','المرشد','الحديث','الفعّال','المنهجي','الإستراتيجي','اليومي','السريع','الإبداعي','المتوازن','العميق','الذهبي','الرقمي','المعاصر','المُلهم'];
+    const starters = ['فن','قوة','أسرار','دليل','مدخل إلى','رحلة إلى','خارطة طريق','أساسيات','مختصر','خطوة خطوة إلى'];
+
+    function slugify(s){ return s.toLowerCase().replace(/\s+/g,'-').replace(/[^\u0600-\u06FFa-z0-9\-]/g,''); }
+
+    function generateBooks(count=100){
+      const set = new Set();
+      const books = [];
+      let i=0, guard=0;
+      while(books.length < count && guard < 5000){
+        guard++;
+        const form = i%5;
+        const n = nouns[i % nouns.length];
+        const a = adjectives[(i*3) % adjectives.length];
+        const st = starters[(i*7) % starters.length];
+        let title = '';
+        if(form===0) title = `${st} ${n}`;
+        if(form===1) title = `${n} ${a}`;
+        if(form===2) title = `${st} ${n} ${a}`;
+        if(form===3) title = `طريق ${n}`;
+        if(form===4) title = `لغة ${n}`;
+        title = title.replace(/\s+/g,' ').trim();
+        if(!set.has(title)){
+          set.add(title);
+          const slug = slugify(title);
+          const price = 80 + ((i*7) % 101); // 80..180
+          books.push({
+            id: slug + '_' + (i+1),
+            title,
+            price,
+            image: `https://picsum.photos/seed/${encodeURIComponent(slug)}/400/560`,
+            desc: `«${title}» يقدم أفكارًا عملية وقصصًا موجزة تساعدك على الفهم والتطبيق في حياتك اليومية. كتاب مناسب للقرّاء الذين يبحثون عن محتوى واضح ومباشر مع أمثلة واقعية.`,
+            seed: slug
+          });
+        }
+        i++;
+      }
+      return books;
+    }
+
+    const BOOKS = generateBooks(100);
+
+    /*********************** تخزين محلي ***********************/
+    const LS = {
+      get(k,def){ try{ return JSON.parse(localStorage.getItem(k)) ?? def; }catch{ return def; } },
+      set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+    };
+
+    /*********************** واجهة الكتب ***********************/
+    const booksGrid = document.getElementById('booksGrid');
+    const qInput = document.getElementById('q');
+
+    function renderBooks(list=BOOKS){
+      booksGrid.innerHTML = '';
+      list.forEach(b=>{
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = ()=> openDetails(b.id);
+        card.innerHTML = `
+          <img class="thumb" loading="lazy" src="${b.image}" alt="${b.title}">
+          <div class="meta">
+            <h3 class="title">${b.title}</h3>
+            <div class="price">${b.price} جنيه</div>
+          </div>
+        `;
+        booksGrid.appendChild(card);
+      });
+    }
+    function filterBooks(q){
+      q = (q||'').trim();
+      const list = !q ? BOOKS : BOOKS.filter(b=> b.title.includes(q));
+      renderBooks(list);
+    }
+
+    /*********************** صفحة التفاصيل ***********************/
+    let currentBook = null;
+    const dImg = document.getElementById('dImg');
+    const dTitle = document.getElementById('dTitle');
+    const dDesc = document.getElementById('dDesc');
+    const dPrice = document.getElementById('dPrice');
+    const reviewsList = document.getElementById('reviewsList');
+    const commentInput = document.getElementById('commentInput');
+
+    function openDetails(id){
+      const b = BOOKS.find(x=>x.id===id);
+      if(!b) return;
+      currentBook = b;
+      dImg.src = b.image;
+      dTitle.textContent = b.title;
+      dPrice.textContent = b.price;
+      dDesc.textContent = b.desc;
+      renderComments();
+      showPage('details');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function goBack(){
+      showPage('books');
+      if(qInput.value) filterBooks(qInput.value);
+    }
+
+    function commentsKey(){ return 'comments_'+(currentBook?.id||''); }
+    function renderComments(){
+      const items = LS.get(commentsKey(), [
+        "مفيد وعملي، أعجبني أسلوب العرض.",
+        "ملخّص ممتاز وأفكار قابلة للتطبيق.",
+        "أنصح بقراءته 👌"
+      ]);
+      reviewsList.innerHTML = '';
+      items.forEach(c=>{
+        const d = document.createElement('div');
+        d.className = 'item';
+        d.textContent = c;
+        reviewsList.appendChild(d);
+      });
+    }
+    function addComment(){
+      const v = (commentInput.value||'').trim();
+      if(!v) return;
+      const items = LS.get(commentsKey(), []);
+      items.push(v);
+      LS.set(commentsKey(), items);
+      commentInput.value='';
+      renderComments();
+    }
+
+    /*********************** السلة ***********************/
+    const cartCount = document.getElementById('cartCount');
+    const cartList = document.getElementById('cartList');
+    const cartTotalEl = document.getElementById('cartTotal');
+
+    function cartKey(){ return 'cart_v1'; }
+    function getCart(){ return LS.get(cartKey(), []); }
+    function saveCart(c){ LS.set(cartKey(), c); updateCartUI(); }
+
+    function addCurrentToCart(){
+      if(!currentBook) return;
+      const cart = getCart();
+      const idx = cart.findIndex(x=>x.id===currentBook.id);
+      if(idx>-1) cart[idx].qty += 1;
+      else cart.push({id:currentBook.id,title:currentBook.title,price:currentBook.price,image:currentBook.image,qty:1});
+      saveCart(cart);
+      // نبقي المستخدم في صفحة التفاصيل
+    }
+
+    function updateQty(id, delta){
+      const cart = getCart();
+      const i = cart.findIndex(x=>x.id===id);
+      if(i>-1){
+        cart[i].qty += delta;
+        if(cart[i].qty<=0) cart.splice(i,1);
+        saveCart(cart);
+      }
+    }
+    function removeItem(id){
+      const cart = getCart().filter(x=>x.id!==id);
+      saveCart(cart);
+    }
+    function clearCart(){ saveCart([]); }
+
+    function updateCartUI(){
+      const cart = getCart();
+      const count = cart.reduce((a,c)=>a+c.qty,0);
+      cartCount.textContent = count;
+      cartList.innerHTML = '';
+      let total = 0;
+      cart.forEach(item=>{
+        total += item.price*item.qty;
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <img class="cart-thumb" src="${item.image}" alt="${item.title}">
+          <div>
+            <div style="font-weight:800">${item.title}</div>
+            <div class="muted">${item.price} ج × ${item.qty}</div>
+          </div>
+          <div class="qty">
+            <button onclick="updateQty('${item.id}',-1)">−</button>
+            <div>${item.qty}</div>
+            <button onclick="updateQty('${item.id}',1)">+</button>
+          </div>
+          <button class="btn ghost" onclick="removeItem('${item.id}')">حذف</button>
+        `;
+        cartList.appendChild(row);
+      });
+      cartTotalEl.textContent = total;
+      // ملخص الدفع
+      const pay = document.getElementById('paySummary');
+      pay.innerHTML = cart.length
+        ? cart.map(i=>`• ${i.title} — ${i.qty} × ${i.price} ج`).join('<br>') + `<div class="divider"></div><b>الإجمالي: ${total} جنيه</b>`
+        : 'السلة فارغة.';
+    }
+
+    /*********************** الحساب (تجريبي محليًا) ***********************/
+    const nameInput = document.getElementById('nameInput');
+    const welcomeBox = document.getElementById('welcomeBox');
+    const authBox = document.getElementById('authBox');
+    const welcomeName = document.getElementById('welcomeName');
+
+    function fakeLogin(){
+      const n = (nameInput.value||'').trim();
+      if(!n) return;
+      LS.set('user_name', n);
+      renderAuth();
+    }
+    function logout(){
+      localStorage.removeItem('user_name');
+      renderAuth();
+    }
+    function renderAuth(){
+      const n = LS.get('user_name', null);
+      if(n){
+        welcomeName.textContent = n;
+        welcomeBox.classList.remove('hide');
+        authBox.classList.add('hide');
+      }else{
+        welcomeBox.classList.add('hide');
+        authBox.classList.remove('hide');
+      }
+    }
+
+    /*********************** تنقّل الصفحات (داخل نفس الصفحة) ***********************/
+    function setActiveNav(id){
+      ['books','cart','account','payment'].forEach(k=>{
+        const el = document.getElementById('nav-'+k);
+        if(el) el.classList.toggle('active', k===id);
+      });
+    }
+    function showPage(id){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      if(id==='books'){ document.getElementById('page-books').classList.add('active'); setActiveNav('books'); }
+      if(id==='details'){ document.getElementById('page-details').classList.add('active'); setActiveNav('books'); }
+      if(id==='cart'){ document.getElementById('page-cart').classList.add('active'); setActiveNav('cart'); updateCartUI(); }
+      if(id==='account'){ document.getElementById('page-account').classList.add('active'); setActiveNav('account'); }
+      if(id==='payment'){ document.getElementById('page-payment').classList.add('active'); setActiveNav('payment'); updateCartUI(); }
+      // تأمين وجود مسافة تحت للناف
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function confirmOrder(){
+      const total = document.getElementById('cartTotal').textContent;
+      alert('تم استلام طلبك بقيمة ' + total + ' جنيه. يرجى التحويل على فودافون كاش ثم تأكيد العملية. شكراً لك!');
+    }
+
+    /*********************** تشغيل أولي ***********************/
+    renderBooks(BOOKS);
+    renderAuth();
+    updateCartUI();
+
+    // استعادة بحث سابق (لو حابب)
+    const lastQ = sessionStorage.getItem('last_q')||'';
+    if(lastQ){ qInput.value = lastQ; filterBooks(lastQ); }
+    qInput.addEventListener('change', ()=> sessionStorage.setItem('last_q', qInput.value||''));
+
+  </script>
+</body>
+</html>
